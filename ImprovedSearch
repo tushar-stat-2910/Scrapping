@@ -1,0 +1,50 @@
+def find_search_box(driver):
+    # 1. Look for input tags with type 'search' or 'text' and relevant placeholder/aria-label
+    inputs = driver.find_elements(By.XPATH, "//input[@type='text' or @type='search']")
+
+    for input_el in inputs:
+        placeholder = (input_el.get_attribute("placeholder") or "").lower()
+        aria_label = (input_el.get_attribute("aria-label") or "").lower()
+        name = (input_el.get_attribute("name") or "").lower()
+        
+        if any(keyword in placeholder for keyword in ["search", "find"]) \
+           or any(keyword in aria_label for keyword in ["search", "find"]) \
+           or any(keyword in name for keyword in ["search", "query", "q"]):
+            return input_el
+
+    # 2. Try fallback: input near a 'Search' button
+    buttons = driver.find_elements(By.XPATH, "//button")
+    for button in buttons:
+        btn_text = button.text.lower()
+        if "search" in btn_text:
+            try:
+                parent = button.find_element(By.XPATH, "..")
+                input_nearby = parent.find_element(By.XPATH, ".//input[@type='text' or @type='search']")
+                return input_nearby
+            except:
+                continue
+
+    return None
+
+
+
+
+
+def search_on_landing_page(driver, query):
+    search_box = find_search_box(driver)
+    if search_box:
+        try:
+            search_box.clear()
+            search_box.send_keys(query)
+            search_box.send_keys(Keys.RETURN)
+            time.sleep(2)
+            print("✅ Searched on the landing page.")
+        except Exception as e:
+            print("⚠️ Error sending keys to search box:", e)
+    else:
+        print("❌ No search box found on the landing page.")
+
+
+
+
+
